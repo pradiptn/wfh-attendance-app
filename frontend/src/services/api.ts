@@ -29,4 +29,13 @@ export const attendanceAPI = {
   getAll: () => api.get('/attendance'),
 };
 
+export const employeeAPI = {
+  getAll: () => api.get('/employees'),
+  create: (email: string, name: string, password: string, role?: string) =>
+    api.post('/employees', { email, name, password, role }),
+  update: (id: number, data: { email?: string; name?: string; role?: string }) =>
+    api.put(`/employees/${id}`, data),
+  delete: (id: number) => api.delete(`/employees/${id}`),
+};
+
 export default api;
