@@ -26,14 +26,34 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         setIsRegister(false);
       } else {
         const response = await authAPI.login(email, password);
+        if (!response.data) {
+          throw new Error('Invalid credentials');
+        }
         localStorage.setItem('token', response.data.access_token);
         onLogin(response.data.user);
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = 'Please check your credentials and try again.';
+      let errorTitle = 'Authentication Failed';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password. Please try again.';
+        errorTitle = 'Invalid Credentials';
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Please fill in all required fields correctly.';
+        errorTitle = 'Invalid Input';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+        errorTitle = 'Server Error';
+      } else if (isRegister && error.response?.status === 409) {
+        errorMessage = 'Email already exists. Please use a different email.';
+        errorTitle = 'Registration Failed';
+      }
+
       Swal.fire({
         icon: 'error',
-        title: 'Authentication Failed',
-        text: 'Please check your credentials and try again.',
+        title: errorTitle,
+        text: errorMessage,
         confirmButtonColor: '#dc3545'
       });
     }
