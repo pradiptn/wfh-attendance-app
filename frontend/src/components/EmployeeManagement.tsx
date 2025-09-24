@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import { employeeAPI } from '../services/api';
 
 interface Employee {
@@ -41,15 +42,32 @@ const EmployeeManagement: React.FC = () => {
           name: formData.name,
           role: formData.role
         });
+        Swal.fire({
+          icon: 'success',
+          title: 'Employee Updated!',
+          text: 'Employee information has been successfully updated.',
+          confirmButtonColor: '#198754'
+        });
       } else {
         await employeeAPI.create(formData.email, formData.name, formData.password, formData.role);
+        Swal.fire({
+          icon: 'success',
+          title: 'Employee Created!',
+          text: 'New employee has been successfully added.',
+          confirmButtonColor: '#198754'
+        });
       }
       setShowModal(false);
       setEditingEmployee(null);
       setFormData({ email: '', name: '', password: '', role: 'employee' });
       fetchEmployees();
     } catch (error) {
-      alert('Operation failed');
+      Swal.fire({
+        icon: 'error',
+        title: 'Operation Failed',
+        text: 'There was an error processing your request. Please try again.',
+        confirmButtonColor: '#dc3545'
+      });
     }
   };
 
@@ -65,12 +83,33 @@ const EmployeeManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
         await employeeAPI.delete(id);
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Employee has been deleted.',
+          confirmButtonColor: '#198754'
+        });
         fetchEmployees();
       } catch (error) {
-        alert('Delete failed');
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: 'There was an error deleting the employee.',
+          confirmButtonColor: '#dc3545'
+        });
       }
     }
   };

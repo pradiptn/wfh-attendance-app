@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { attendanceAPI } from '../services/api';
 
 const AttendanceForm: React.FC = () => {
@@ -9,7 +10,12 @@ const AttendanceForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!photo) {
-      alert('Please select a photo');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Photo Required',
+        text: 'Please select a photo before submitting.',
+        confirmButtonColor: '#ffc107'
+      });
       return;
     }
 
@@ -20,14 +26,24 @@ const AttendanceForm: React.FC = () => {
 
     try {
       await attendanceAPI.create(formData);
-      alert('Attendance recorded successfully!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Attendance Recorded!',
+        text: 'Your attendance has been successfully recorded.',
+        confirmButtonColor: '#198754'
+      });
       setPhoto(null);
       setNotes('');
       // Reset file input
       const fileInput = document.getElementById('photo') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
     } catch (error) {
-      alert('Failed to record attendance');
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to Record',
+        text: 'There was an error recording your attendance. Please try again.',
+        confirmButtonColor: '#dc3545'
+      });
     } finally {
       setLoading(false);
     }

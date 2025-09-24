@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { authAPI } from '../services/api';
 
 interface LoginProps {
@@ -16,7 +17,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     try {
       if (isRegister) {
         await authAPI.register(email, password, name);
-        alert('Registration successful! Please login.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful!',
+          text: 'Please login with your credentials.',
+          confirmButtonColor: '#0d6efd'
+        });
         setIsRegister(false);
       } else {
         const response = await authAPI.login(email, password);
@@ -24,7 +30,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         onLogin(response.data.user);
       }
     } catch (error) {
-      alert('Authentication failed');
+      Swal.fire({
+        icon: 'error',
+        title: 'Authentication Failed',
+        text: 'Please check your credentials and try again.',
+        confirmButtonColor: '#dc3545'
+      });
     }
   };
 
