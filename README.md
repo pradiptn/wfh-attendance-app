@@ -19,7 +19,7 @@ A fullstack web application for Work From Home employee attendance tracking with
 **Backend:**
 - NestJS (Node.js framework)
 - TypeORM (Database ORM)
-- MySQL (Database)
+- PostgreSQL (Database)
 - JWT (Authentication)
 - Multer (File upload)
 
@@ -32,7 +32,7 @@ A fullstack web application for Work From Home employee attendance tracking with
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- MySQL server
+- PostgreSQL server
 - npm or yarn
 
 ### Installation
@@ -50,10 +50,10 @@ CREATE DATABASE wfh_attendance;
 3. Update database credentials in `backend/src/app.module.ts`:
 ```typescript
 TypeOrmModule.forRoot({
-  type: 'mysql',
+  type: 'postgres',
   host: 'localhost',
-  port: 3306,
-  username: 'your_username',
+  port: 5432,
+  username: 'postgres',
   password: 'your_password',
   database: 'wfh_attendance',
   // ...
