@@ -148,7 +148,7 @@ const AttendanceList: React.FC = () => {
                           <td>
                             <button 
                               className="btn btn-outline-primary btn-sm"
-                              onClick={() => setSelectedPhoto(`http://localhost:3001/${attendance.photoPath}`)}
+                              onClick={() => setSelectedPhoto(`http://localhost:3001/uploads/${attendance.photoPath.replace('uploads/', '')}`)}
                             >
                               <i className="bi bi-eye me-1"></i>
                               View Photo
