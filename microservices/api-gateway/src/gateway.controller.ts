@@ -7,7 +7,9 @@ export class GatewayController {
   constructor(private gatewayService: GatewayService) {}
 
   private getServiceUrl(service: string, port: number): string {
-    const host = process.env.NODE_ENV === 'production' ? service : 'localhost';
+    // Check if running in Docker by looking for Docker-specific environment
+    const isDocker = process.env.NODE_ENV === 'production' || process.env.DOCKER_ENV === 'true' || process.env.HOSTNAME?.includes('docker');
+    const host = isDocker ? service : 'localhost';
     return `http://${host}:${port}`;
   }
 
