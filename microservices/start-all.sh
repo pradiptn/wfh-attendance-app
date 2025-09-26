@@ -3,10 +3,10 @@
 echo "Starting all microservices..."
 
 # Start services in background
-cd auth-service && npm run start:dev &
-cd ../employee-service && npm run start:dev &
-cd ../attendance-service && npm run start:dev &
-cd ../api-gateway && npm run start:dev &
+(cd auth-service && npm run start:dev) &
+(cd employee-service && npm run start:dev) &
+(cd attendance-service && npm run start:dev) &
+(cd api-gateway && npm run start:dev) &
 
 echo "All services starting..."
 echo "Auth Service: http://localhost:3001"
