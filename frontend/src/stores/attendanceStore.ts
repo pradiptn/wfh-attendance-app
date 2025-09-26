@@ -31,7 +31,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
       console.log('Attendance data received:', response.data);
       console.log('Data length:', response.data?.length);
       set({ attendances: response.data || [], loading: false });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching attendances:', error);
       console.error('Error details:', error.response?.data);
       set({ attendances: [], loading: false });
@@ -42,7 +42,7 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
     try {
       await attendanceAPI.create(data);
       await get().fetchAttendances();
-    } catch (error) {
+    } catch (error: any) {
       throw error;
     }
   },
