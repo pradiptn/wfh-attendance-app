@@ -14,7 +14,7 @@ export const employeeSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['employee', 'admin']),
+  role: z.union([z.literal('employee'), z.literal('admin')]),
 });
 
 export type LoginForm = z.infer<typeof loginSchema>;
