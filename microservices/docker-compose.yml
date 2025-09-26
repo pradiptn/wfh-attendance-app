@@ -110,7 +110,7 @@ services:
       context: ./api-gateway
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "4000:4000"
     environment:
       - NODE_ENV=development
       - AUTH_SERVICE_URL=http://auth-service:3001

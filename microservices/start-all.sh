@@ -24,7 +24,7 @@ echo "All services starting..."
 echo "Auth Service: http://localhost:3001"
 echo "Employee Service: http://localhost:3002" 
 echo "Attendance Service: http://localhost:3003"
-echo "API Gateway: http://localhost:3000"
+echo "API Gateway: http://localhost:4000"
 echo ""
 echo "Press Ctrl+C to stop all services"
 
