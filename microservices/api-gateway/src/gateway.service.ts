@@ -14,6 +14,7 @@ export class GatewayService {
           host: undefined,
         },
         params: req.query,
+        validateStatus: (status: number) => status < 500, // Accept all status codes < 500
       };
 
       // Handle form data and file uploads
@@ -25,6 +26,13 @@ export class GatewayService {
       }
 
       const response = await axios(config);
+      
+      // Handle 304 Not Modified responses
+      if (response.status === 304) {
+        res.status(304).end();
+        return;
+      }
+      
       res.status(response.status).json(response.data);
     } catch (error: any) {
       console.error('Gateway proxy error:', error.message);
