@@ -88,20 +88,21 @@ const AttendanceManagement: React.FC = () => {
                       <td>{new Date(attendance.date).toLocaleDateString()}</td>
                       <td>{attendance.time}</td>
                       <td>
-                        <img
-                          src={`http://localhost:3000/uploads/${attendance.photo}`}
-                          alt="Attendance"
-                          className="img-thumbnail"
-                          style={{ width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer' }}
+                        <button
+                          className="btn btn-sm btn-outline-primary"
                           onClick={() => {
                             Swal.fire({
-                              imageUrl: `http://localhost:3000/uploads/${attendance.photo}`,
+                              imageUrl: `http://localhost:4000/uploads/${attendance.photo}`,
                               imageWidth: 400,
                               imageHeight: 300,
-                              imageAlt: 'Attendance Photo'
+                              imageAlt: 'Attendance Photo',
+                              showConfirmButton: false,
+                              showCloseButton: true
                             });
                           }}
-                        />
+                        >
+                          <i className="bi bi-eye"></i> View Photo
+                        </button>
                       </td>
                       <td>{attendance.notes || '-'}</td>
                     </tr>

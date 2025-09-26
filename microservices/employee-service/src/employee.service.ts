@@ -2,7 +2,7 @@ import { Injectable, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Employee } from './employee.entity';
-import * as bcrypt from 'bcryptjs';
+import * as argon2 from 'argon2';
 import axios from 'axios';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class EmployeeService {
 
   async create(data: { name: string; email: string; password: string; role?: string }, authHeader: string) {
     await this.verifyAdmin(authHeader);
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await argon2.hash(data.password, { type: argon2.argon2id });
     const employee = this.employeeRepository.create({
       ...data,
       password: hashedPassword,

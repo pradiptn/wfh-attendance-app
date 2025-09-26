@@ -1,15 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAttendanceStore } from '../stores/attendanceStore';
 import { useAuthStore } from '../stores/authStore';
 
 const AttendanceList: React.FC = () => {
   const { attendances, loading, fetchAttendances } = useAttendanceStore();
   const { user } = useAuthStore();
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const userId = user?.role === 'admin' ? undefined : user?.id;
     fetchAttendances(userId);
   }, [fetchAttendances, user]);
+
+  const handleViewPhoto = (photoPath: string) => {
+    setSelectedPhoto(`http://localhost:4000/uploads/${photoPath}`);
+  };
+
+  const closeModal = () => {
+    setSelectedPhoto(null);
+  };
 
   if (loading) {
     return (
@@ -54,12 +63,12 @@ const AttendanceList: React.FC = () => {
                         <td>{attendance.user?.name || 'Unknown'}</td>
                       )}
                       <td>
-                        <img
-                          src={`http://localhost:3000/uploads/${attendance.photo}`}
-                          alt="Attendance"
-                          className="img-thumbnail"
-                          style={{ width: '60px', height: '60px', objectFit: 'cover' }}
-                        />
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleViewPhoto(attendance.photo)}
+                        >
+                          <i className="bi bi-eye"></i> View Photo
+                        </button>
                       </td>
                       <td>{attendance.notes || '-'}</td>
                     </tr>
@@ -70,6 +79,33 @@ const AttendanceList: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Photo Modal */}
+      {selectedPhoto && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Attendance Photo</h5>
+                <button type="button" className="btn-close" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body text-center">
+                <img
+                  src={selectedPhoto}
+                  alt="Attendance"
+                  className="img-fluid"
+                  style={{ maxHeight: '500px' }}
+                />
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
