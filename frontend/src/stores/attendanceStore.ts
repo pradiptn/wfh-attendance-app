@@ -25,8 +25,10 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
     set({ loading: true });
     try {
       const response = await attendanceAPI.getAll(userId);
+      console.log('Attendance data received:', response.data);
       set({ attendances: response.data, loading: false });
     } catch (error) {
+      console.error('Error fetching attendances:', error);
       set({ loading: false });
       throw error;
     }

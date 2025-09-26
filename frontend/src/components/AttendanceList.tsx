@@ -13,7 +13,11 @@ const AttendanceList: React.FC = () => {
   }, [fetchAttendances, user]);
 
   const handleViewPhoto = (photoPath: string) => {
-    setSelectedPhoto(`http://localhost:4000/uploads/${photoPath}`);
+    // Handle different photo path formats
+    const photoUrl = photoPath.startsWith('http') 
+      ? photoPath 
+      : `http://localhost:4000/uploads/${photoPath.replace(/^uploads\//, '')}`;
+    setSelectedPhoto(photoUrl);
   };
 
   const closeModal = () => {
@@ -57,8 +61,8 @@ const AttendanceList: React.FC = () => {
                 <tbody>
                   {attendances.map((attendance) => (
                     <tr key={attendance.id}>
-                      <td>{new Date(attendance.date).toLocaleDateString()}</td>
-                      <td>{attendance.time}</td>
+                      <td>{attendance.date ? new Date(attendance.date).toLocaleDateString() : 'N/A'}</td>
+                      <td>{attendance.time || 'N/A'}</td>
                       {user?.role === 'admin' && (
                         <td>{attendance.user?.name || 'Unknown'}</td>
                       )}
@@ -66,6 +70,7 @@ const AttendanceList: React.FC = () => {
                         <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => handleViewPhoto(attendance.photo)}
+                          disabled={!attendance.photo}
                         >
                           <i className="bi bi-eye"></i> View Photo
                         </button>
@@ -95,6 +100,10 @@ const AttendanceList: React.FC = () => {
                   alt="Attendance"
                   className="img-fluid"
                   style={{ maxHeight: '500px' }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+                  }}
                 />
               </div>
               <div className="modal-footer">

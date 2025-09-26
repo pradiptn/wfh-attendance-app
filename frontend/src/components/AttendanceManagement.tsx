@@ -12,16 +12,16 @@ const AttendanceManagement: React.FC = () => {
   }, [fetchAttendances]);
 
   const filteredAttendances = attendances.filter(attendance => {
-    const matchesSearch = attendance.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         attendance.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (attendance.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (attendance.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filter === 'today') {
-      return matchesSearch && new Date(attendance.date).toDateString() === new Date().toDateString();
+      return matchesSearch && attendance.date && new Date(attendance.date).toDateString() === new Date().toDateString();
     }
     if (filter === 'week') {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return matchesSearch && new Date(attendance.date) >= weekAgo;
+      return matchesSearch && attendance.date && new Date(attendance.date) >= weekAgo;
     }
     return matchesSearch;
   });
@@ -83,16 +83,19 @@ const AttendanceManagement: React.FC = () => {
                   {filteredAttendances.map((attendance) => (
                     <tr key={attendance.id}>
                       <td>{attendance.id}</td>
-                      <td>{attendance.user?.name}</td>
-                      <td>{attendance.user?.email}</td>
-                      <td>{new Date(attendance.date).toLocaleDateString()}</td>
-                      <td>{attendance.time}</td>
+                      <td>{attendance.user?.name || 'Unknown'}</td>
+                      <td>{attendance.user?.email || 'N/A'}</td>
+                      <td>{attendance.date ? new Date(attendance.date).toLocaleDateString() : 'N/A'}</td>
+                      <td>{attendance.time || 'N/A'}</td>
                       <td>
                         <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => {
+                            const photoUrl = attendance.photo.startsWith('http') 
+                              ? attendance.photo 
+                              : `http://localhost:4000/uploads/${attendance.photo.replace(/^uploads\//, '')}`;
                             Swal.fire({
-                              imageUrl: `http://localhost:4000/uploads/${attendance.photo}`,
+                              imageUrl: photoUrl,
                               imageWidth: 400,
                               imageHeight: 300,
                               imageAlt: 'Attendance Photo',
@@ -100,6 +103,7 @@ const AttendanceManagement: React.FC = () => {
                               showCloseButton: true
                             });
                           }}
+                          disabled={!attendance.photo}
                         >
                           <i className="bi bi-eye"></i> View Photo
                         </button>
