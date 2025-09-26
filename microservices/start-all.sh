@@ -2,21 +2,19 @@
 
 echo "Starting all microservices..."
 
-# Build and start services
+# Install dependencies first
 services=("auth-service" "employee-service" "attendance-service" "api-gateway")
 
 for service in "${services[@]}"; do
-    echo "Building $service..."
-    (cd $service && npm install && npm run build) &
+    echo "Installing dependencies for $service..."
+    (cd $service && npm install --silent)
 done
 
-wait
-
-# Start services in background
-(cd auth-service && npm start) &
-(cd employee-service && npm start) &
-(cd attendance-service && npm start) &
-(cd api-gateway && npm start) &
+# Start services in development mode using ts-node
+(cd auth-service && npx ts-node src/main.ts) &
+(cd employee-service && npx ts-node src/main.ts) &
+(cd attendance-service && npx ts-node src/main.ts) &
+(cd api-gateway && npx ts-node src/main.ts) &
 
 echo "All services starting..."
 echo "Auth Service: http://localhost:3001"
