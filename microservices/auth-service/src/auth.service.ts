@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 
 @Injectable()
@@ -20,21 +20,21 @@ export class AuthService implements OnModuleInit {
   private async createDefaultAdmin() {
     const adminExists = await this.userRepository.findOne({ where: { role: 'admin' } });
     if (!adminExists) {
-      const hashedPassword = await argon2.hash('admin123', { type: argon2.argon2id });
+      const hashedPassword = await bcrypt.hash('admin123', 10);
       const admin = this.userRepository.create({
-        email: 'admin@example.com',
+        email: 'admin@wfh.com',
         password: hashedPassword,
-        name: 'Default Admin',
+        name: 'Admin User',
         role: 'admin',
       });
       await this.userRepository.save(admin);
-      console.log('Default admin created: admin@example.com / admin123');
+      console.log('Default admin created: admin@wfh.com / admin123');
     }
   }
 
   async login(loginDto: { email: string; password: string }) {
     const user = await this.userRepository.findOne({ where: { email: loginDto.email } });
-    if (!user || !await argon2.verify(user.password, loginDto.password)) {
+    if (!user || !await bcrypt.compare(loginDto.password, user.password)) {
       throw new Error('Invalid credentials');
     }
 
@@ -51,7 +51,7 @@ export class AuthService implements OnModuleInit {
       throw new Error('User already exists');
     }
 
-    const hashedPassword = await argon2.hash(registerDto.password, { type: argon2.argon2id });
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = this.userRepository.create({
       email: registerDto.email,
       password: hashedPassword,
