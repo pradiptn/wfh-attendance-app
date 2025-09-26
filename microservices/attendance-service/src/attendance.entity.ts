@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity('attendances')
 export class Attendance {
   @PrimaryGeneratedColumn()
   id: number;
@@ -8,12 +8,18 @@ export class Attendance {
   @Column()
   userId: number;
 
-  @Column({ nullable: true })
-  photo: string;
+  @Column()
+  userName: string;
+
+  @Column()
+  userEmail: string;
+
+  @Column()
+  photoPath: string;
 
   @Column({ nullable: true })
   notes: string;
 
   @CreateDateColumn()
-  timestamp: Date;
+  createdAt: Date;
 }

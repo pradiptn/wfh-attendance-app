@@ -1,5 +1,4 @@
-import { Controller, All, Req, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, All, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { GatewayService } from './gateway.service';
 
@@ -9,20 +8,26 @@ export class GatewayController {
 
   @All('auth/*')
   async authProxy(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://localhost:3001', req, res);
+    return this.gatewayService.proxyRequest('http://auth-service:3001', req, res);
   }
 
   @All('employees/*')
   async employeeProxy(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://localhost:3002', req, res);
+    return this.gatewayService.proxyRequest('http://employee-service:3002', req, res);
+  }
+
+  @All('employees')
+  async employeeProxyRoot(@Req() req: Request, @Res() res: Response) {
+    return this.gatewayService.proxyRequest('http://employee-service:3002', req, res);
+  }
+
+  @All('attendance/*')
+  async attendanceProxy(@Req() req: Request, @Res() res: Response) {
+    return this.gatewayService.proxyRequest('http://attendance-service:3003', req, res);
   }
 
   @All('attendance')
-  @UseInterceptors(FileInterceptor('photo'))
-  async attendanceProxy(@Req() req: Request, @Res() res: Response, @UploadedFile() file?: Express.Multer.File) {
-    if (file) {
-      req.body.photo = file;
-    }
-    return this.gatewayService.proxyRequest('http://localhost:3003', req, res);
+  async attendanceProxyRoot(@Req() req: Request, @Res() res: Response) {
+    return this.gatewayService.proxyRequest('http://attendance-service:3003', req, res);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 
 @Controller('employees')
@@ -6,27 +6,22 @@ export class EmployeeController {
   constructor(private employeeService: EmployeeService) {}
 
   @Get()
-  findAll() {
-    return this.employeeService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.employeeService.findOne(+id);
+  async getAll(@Headers('authorization') auth: string) {
+    return this.employeeService.getAll(auth);
   }
 
   @Post()
-  create(@Body() employeeData: any) {
-    return this.employeeService.create(employeeData);
+  async create(@Body() body: any, @Headers('authorization') auth: string) {
+    return this.employeeService.create(body, auth);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() employeeData: any) {
-    return this.employeeService.update(+id, employeeData);
+  async update(@Param('id') id: number, @Body() body: any, @Headers('authorization') auth: string) {
+    return this.employeeService.update(id, body, auth);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.employeeService.remove(+id);
+  async delete(@Param('id') id: number, @Headers('authorization') auth: string) {
+    return this.employeeService.delete(id, auth);
   }
 }

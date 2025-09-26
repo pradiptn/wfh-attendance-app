@@ -1,22 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity('employees')
 export class Employee {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  userId: number;
-
-  @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column()
-  position: string;
+  password: string;
 
-  @Column()
-  department: string;
+  @Column({ default: 'employee' })
+  role: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

@@ -4,24 +4,24 @@ import axios from 'axios';
 
 @Injectable()
 export class GatewayService {
-  async proxyRequest(serviceUrl: string, req: Request, res: Response) {
+  async proxyRequest(targetUrl: string, req: Request, res: Response) {
     try {
-      const url = `${serviceUrl}${req.url}`;
       const response = await axios({
-        method: req.method as any,
-        url,
+        method: req.method,
+        url: `${targetUrl}${req.url}`,
         data: req.body,
         headers: {
           ...req.headers,
           host: undefined,
         },
+        params: req.query,
       });
-      
+
       res.status(response.status).json(response.data);
-    } catch (error) {
+    } catch (error: any) {
       const status = error.response?.status || 500;
-      const message = error.response?.data || 'Service unavailable';
-      res.status(status).json(message);
+      const data = error.response?.data || { message: 'Internal server error' };
+      res.status(status).json(data);
     }
   }
 }
