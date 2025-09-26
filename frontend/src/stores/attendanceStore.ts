@@ -22,14 +22,19 @@ export const useAttendanceStore = create<AttendanceState>((set, get) => ({
   attendances: [],
   loading: false,
   fetchAttendances: async (userId) => {
+    console.log('fetchAttendances called with userId:', userId);
     set({ loading: true });
     try {
+      console.log('Making API call to:', `/attendance${userId ? `?userId=${userId}` : ''}`);
       const response = await attendanceAPI.getAll(userId);
+      console.log('API response:', response);
       console.log('Attendance data received:', response.data);
-      set({ attendances: response.data, loading: false });
+      console.log('Data length:', response.data?.length);
+      set({ attendances: response.data || [], loading: false });
     } catch (error) {
       console.error('Error fetching attendances:', error);
-      set({ loading: false });
+      console.error('Error details:', error.response?.data);
+      set({ attendances: [], loading: false });
       throw error;
     }
   },

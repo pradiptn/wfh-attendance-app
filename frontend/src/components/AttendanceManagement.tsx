@@ -8,6 +8,7 @@ const AttendanceManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    console.log('AttendanceManagement useEffect triggered');
     fetchAttendances();
   }, [fetchAttendances]);
 
@@ -25,6 +26,9 @@ const AttendanceManagement: React.FC = () => {
     }
     return matchesSearch;
   });
+
+  console.log('AttendanceManagement render - attendances:', attendances);
+  console.log('AttendanceManagement render - filteredAttendances:', filteredAttendances);
 
   return (
     <div className="container mt-4">
@@ -91,9 +95,11 @@ const AttendanceManagement: React.FC = () => {
                         <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => {
+                            console.log('Photo button clicked:', attendance.photo);
                             const photoUrl = attendance.photo.startsWith('http') 
                               ? attendance.photo 
                               : `http://localhost:4000/uploads/${attendance.photo.replace(/^uploads\//, '')}`;
+                            console.log('Photo URL:', photoUrl);
                             Swal.fire({
                               imageUrl: photoUrl,
                               imageWidth: 400,
@@ -103,7 +109,6 @@ const AttendanceManagement: React.FC = () => {
                               showCloseButton: true
                             });
                           }}
-                          disabled={!attendance.photo}
                         >
                           <i className="bi bi-eye"></i> View Photo
                         </button>

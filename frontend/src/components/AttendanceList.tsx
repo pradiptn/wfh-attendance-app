@@ -8,15 +8,20 @@ const AttendanceList: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('AttendanceList useEffect triggered');
+    console.log('Current user:', user);
     const userId = user?.role === 'admin' ? undefined : user?.id;
+    console.log('Fetching attendances for userId:', userId);
     fetchAttendances(userId);
   }, [fetchAttendances, user]);
 
   const handleViewPhoto = (photoPath: string) => {
+    console.log('handleViewPhoto called with:', photoPath);
     // Handle different photo path formats
     const photoUrl = photoPath.startsWith('http') 
       ? photoPath 
       : `http://localhost:4000/uploads/${photoPath.replace(/^uploads\//, '')}`;
+    console.log('Final photo URL:', photoUrl);
     setSelectedPhoto(photoUrl);
   };
 
@@ -25,6 +30,7 @@ const AttendanceList: React.FC = () => {
   };
 
   if (loading) {
+    console.log('AttendanceList: Loading state');
     return (
       <div className="text-center">
         <div className="spinner-border" role="status">
@@ -33,6 +39,9 @@ const AttendanceList: React.FC = () => {
       </div>
     );
   }
+
+  console.log('AttendanceList render - attendances:', attendances);
+  console.log('AttendanceList render - attendances length:', attendances.length);
 
   return (
     <div className="container mt-4">
@@ -69,8 +78,10 @@ const AttendanceList: React.FC = () => {
                       <td>
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleViewPhoto(attendance.photo)}
-                          disabled={!attendance.photo}
+                          onClick={() => {
+                            console.log('Button clicked, photo:', attendance.photo);
+                            handleViewPhoto(attendance.photo);
+                          }}
                         >
                           <i className="bi bi-eye"></i> View Photo
                         </button>
