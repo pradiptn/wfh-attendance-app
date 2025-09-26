@@ -3,10 +3,10 @@
 echo "Starting all microservices..."
 
 # Start services in background
-(cd auth-service && npm run start:dev) &
-(cd employee-service && npm run start:dev) &
-(cd attendance-service && npm run start:dev) &
-(cd api-gateway && npm run start:dev) &
+(cd auth-service && npx nest start --watch) &
+(cd employee-service && npx nest start --watch) &
+(cd attendance-service && npx nest start --watch) &
+(cd api-gateway && npx nest start --watch) &
 
 echo "All services starting..."
 echo "Auth Service: http://localhost:3001"
