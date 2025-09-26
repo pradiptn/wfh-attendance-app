@@ -6,19 +6,28 @@ import axios from 'axios';
 export class GatewayService {
   async proxyRequest(targetUrl: string, req: Request, res: Response) {
     try {
-      const response = await axios({
+      const config: any = {
         method: req.method,
         url: `${targetUrl}${req.url}`,
-        data: req.body,
         headers: {
           ...req.headers,
           host: undefined,
         },
         params: req.query,
-      });
+      };
 
+      // Handle form data and file uploads
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        config.data = req;
+        config.headers['content-type'] = req.headers['content-type'];
+      } else {
+        config.data = req.body;
+      }
+
+      const response = await axios(config);
       res.status(response.status).json(response.data);
     } catch (error: any) {
+      console.error('Gateway proxy error:', error.message);
       const status = error.response?.status || 500;
       const data = error.response?.data || { message: 'Internal server error' };
       res.status(status).json(data);

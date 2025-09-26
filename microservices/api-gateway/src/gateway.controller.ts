@@ -6,28 +6,33 @@ import { GatewayService } from './gateway.service';
 export class GatewayController {
   constructor(private gatewayService: GatewayService) {}
 
+  private getServiceUrl(service: string, port: number): string {
+    const host = process.env.NODE_ENV === 'production' ? service : 'localhost';
+    return `http://${host}:${port}`;
+  }
+
   @All('auth/*')
   async authProxy(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://auth-service:3001', req, res);
+    return this.gatewayService.proxyRequest(this.getServiceUrl('auth-service', 3001), req, res);
   }
 
   @All('employees/*')
   async employeeProxy(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://employee-service:3002', req, res);
+    return this.gatewayService.proxyRequest(this.getServiceUrl('employee-service', 3002), req, res);
   }
 
   @All('employees')
   async employeeProxyRoot(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://employee-service:3002', req, res);
+    return this.gatewayService.proxyRequest(this.getServiceUrl('employee-service', 3002), req, res);
   }
 
   @All('attendance/*')
   async attendanceProxy(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://attendance-service:3003', req, res);
+    return this.gatewayService.proxyRequest(this.getServiceUrl('attendance-service', 3003), req, res);
   }
 
   @All('attendance')
   async attendanceProxyRoot(@Req() req: Request, @Res() res: Response) {
-    return this.gatewayService.proxyRequest('http://attendance-service:3003', req, res);
+    return this.gatewayService.proxyRequest(this.getServiceUrl('attendance-service', 3003), req, res);
   }
 }
