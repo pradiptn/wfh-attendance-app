@@ -125,12 +125,13 @@ services:
     image: node:16-alpine
     working_dir: /app
     volumes:
-      - ./seed-admin-docker.js:/app/seed-admin.js
+      - ./wait-and-seed.js:/app/wait-and-seed.js
     environment:
       - NODE_ENV=production
-    command: sh -c "npm install bcrypt pg && node seed-admin.js"
+    command: sh -c "npm install bcrypt pg && node wait-and-seed.js"
     depends_on:
-      - auth-db
+      - employee-db
+      - employee-service
     restart: "no"
 
 volumes:
