@@ -12,6 +12,7 @@ services:
       - "5433:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
+      - ./init-admin.sql:/docker-entrypoint-initdb.d/99-init-admin.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
@@ -119,20 +120,6 @@ services:
       - employee-service
       - attendance-service
     restart: unless-stopped
-
-  # Seed admin user
-  seed-admin:
-    image: node:16-alpine
-    working_dir: /app
-    volumes:
-      - ./wait-and-seed.js:/app/wait-and-seed.js
-    environment:
-      - NODE_ENV=production
-    command: sh -c "npm install bcrypt pg && node wait-and-seed.js"
-    depends_on:
-      - employee-db
-      - employee-service
-    restart: "no"
 
 volumes:
   auth_db_data:
