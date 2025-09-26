@@ -1,115 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { employeeAPI } from '../services/api';
-
-interface Employee {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-}
+import { useEmployeeStore } from '../stores/employeeStore';
+import { employeeSchema, EmployeeForm } from '../schemas/validationSchemas';
 
 const EmployeeManagement: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [formData, setFormData] = useState({
-    email: '',
+  const [formData, setFormData] = useState<Partial<EmployeeForm>>({
     name: '',
+    email: '',
     password: '',
-    role: 'employee'
+    role: 'employee',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editingId, setEditingId] = useState<number | null>(null);
+  
+  const { employees, loading, fetchEmployees, createEmployee, updateEmployee, deleteEmployee } = useEmployeeStore();
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await employeeAPI.getAll();
-      setEmployees(response.data);
-    } catch (error) {
-      console.error('Failed to fetch employees');
-    }
-  };
+  }, [fetchEmployees]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
     try {
-      if (editingEmployee) {
-        await employeeAPI.update(editingEmployee.id, {
-          email: formData.email,
-          name: formData.name,
-          role: formData.role
-        });
-        Swal.fire({
-          icon: 'success',
-          title: 'Employee Updated!',
-          text: 'Employee information has been successfully updated.',
-          confirmButtonColor: '#198754'
-        });
+      const validData = employeeSchema.parse(formData);
+
+      if (editingId) {
+        await updateEmployee(editingId, validData);
+        Swal.fire('Success', 'Employee updated successfully!', 'success');
       } else {
-        await employeeAPI.create(formData.email, formData.name, formData.password, formData.role);
-        Swal.fire({
-          icon: 'success',
-          title: 'Employee Created!',
-          text: 'New employee has been successfully added.',
-          confirmButtonColor: '#198754'
-        });
+        await createEmployee(validData);
+        Swal.fire('Success', 'Employee created successfully!', 'success');
       }
-      setShowModal(false);
-      setEditingEmployee(null);
-      setFormData({ email: '', name: '', password: '', role: 'employee' });
-      fetchEmployees();
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Operation Failed',
-        text: 'There was an error processing your request. Please try again.',
-        confirmButtonColor: '#dc3545'
-      });
+
+      setFormData({ name: '', email: '', password: '', role: 'employee' });
+      setEditingId(null);
+    } catch (error: any) {
+      if (error.errors) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          fieldErrors[err.path[0]] = err.message;
+        });
+        setErrors(fieldErrors);
+      } else {
+        Swal.fire('Error', error.response?.data?.message || 'Operation failed', 'error');
+      }
     }
   };
 
-  const handleEdit = (employee: Employee) => {
-    setEditingEmployee(employee);
+  const handleEdit = (employee: any) => {
     setFormData({
-      email: employee.email,
       name: employee.name,
-      password: '',
-      role: employee.role
+      email: employee.email,
+      role: employee.role,
     });
-    setShowModal(true);
+    setEditingId(employee.id);
   };
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      text: 'This action cannot be undone!',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Yes, delete it!'
     });
 
     if (result.isConfirmed) {
       try {
-        await employeeAPI.delete(id);
-        Swal.fire({
-          icon: 'success',
-          title: 'Deleted!',
-          text: 'Employee has been deleted.',
-          confirmButtonColor: '#198754'
-        });
-        fetchEmployees();
+        await deleteEmployee(id);
+        Swal.fire('Deleted!', 'Employee has been deleted.', 'success');
       } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Delete Failed',
-          text: 'There was an error deleting the employee.',
-          confirmButtonColor: '#dc3545'
-        });
+        Swal.fire('Error', 'Failed to delete employee', 'error');
       }
     }
   };
@@ -117,142 +82,128 @@ const EmployeeManagement: React.FC = () => {
   return (
     <div className="container mt-4">
       <div className="row">
-        <div className="col-12">
-          <div className="card shadow">
-            <div className="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-              <h3 className="card-title mb-0">
-                <i className="bi bi-people me-2"></i>Employee Management
-              </h3>
-              <button 
-                className="btn btn-dark"
-                onClick={() => {
-                  setEditingEmployee(null);
-                  setFormData({ email: '', name: '', password: '', role: 'employee' });
-                  setShowModal(true);
-                }}
-              >
-                <i className="bi bi-plus-circle me-1"></i>Add Employee
-              </button>
+        <div className="col-md-4">
+          <div className="card">
+            <div className="card-header">
+              <h5>{editingId ? 'Edit Employee' : 'Add Employee'}</h5>
             </div>
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employees.map((employee) => (
-                      <tr key={employee.id}>
-                        <td><strong>{employee.name}</strong></td>
-                        <td>{employee.email}</td>
-                        <td>
-                          <span className={`badge ${employee.role === 'admin' ? 'bg-danger' : 'bg-secondary'}`}>
-                            {employee.role}
-                          </span>
-                        </td>
-                        <td>
-                          <button 
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => handleEdit(employee)}
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(employee.id)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
+            <div className="card-body">
               <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      required
-                    />
-                  </div>
-                  {!editingEmployee && (
-                    <div className="mb-3">
-                      <label className="form-label">Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        required
-                      />
-                    </div>
-                  )}
-                  <div className="mb-3">
-                    <label className="form-label">Role</label>
-                    <select
-                      className="form-select"
-                      value={formData.role}
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    >
-                      <option value="employee">Employee</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                    placeholder="Full Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                  {errors.name && <div className="invalid-feedback">{errors.name}</div>}
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <div className="mb-3">
+                  <input
+                    type="email"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
+                  {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                  {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+                </div>
+                <div className="mb-3">
+                  <select
+                    className={`form-control ${errors.role ? 'is-invalid' : ''}`}
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value as 'employee' | 'admin'})}
+                  >
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  {errors.role && <div className="invalid-feedback">{errors.role}</div>}
+                </div>
+                <button type="submit" className="btn btn-primary w-100">
+                  {editingId ? 'Update' : 'Create'} Employee
+                </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary w-100 mt-2"
+                    onClick={() => {
+                      setEditingId(null);
+                      setFormData({ name: '', email: '', password: '', role: 'employee' });
+                    }}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingEmployee ? 'Update' : 'Create'}
-                  </button>
-                </div>
+                )}
               </form>
             </div>
           </div>
         </div>
-      )}
+        <div className="col-md-8">
+          <div className="card">
+            <div className="card-header">
+              <h5>Employee List</h5>
+            </div>
+            <div className="card-body">
+              {loading ? (
+                <div className="text-center">
+                  <div className="spinner-border" role="status"></div>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employees.map((employee) => (
+                        <tr key={employee.id}>
+                          <td>{employee.name}</td>
+                          <td>{employee.email}</td>
+                          <td>
+                            <span className={`badge ${employee.role === 'admin' ? 'bg-danger' : 'bg-primary'}`}>
+                              {employee.role}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-primary me-2"
+                              onClick={() => handleEdit(employee)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(employee.id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

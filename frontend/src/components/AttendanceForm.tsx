@@ -1,49 +1,43 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { attendanceAPI } from '../services/api';
+import { useAttendanceStore } from '../stores/attendanceStore';
+import { attendanceSchema, AttendanceForm as AttendanceFormType } from '../schemas/validationSchemas';
 
 const AttendanceForm: React.FC = () => {
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [notes, setNotes] = useState('');
+  const [formData, setFormData] = useState<Partial<AttendanceFormType>>({
+    notes: '',
+    photo: undefined,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  
+  const createAttendance = useAttendanceStore((state) => state.createAttendance);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!photo) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Photo Required',
-        text: 'Please select a photo before submitting.',
-        confirmButtonColor: '#ffc107'
-      });
-      return;
-    }
-
+    setErrors({});
     setLoading(true);
-    const formData = new FormData();
-    formData.append('photo', photo);
-    formData.append('notes', notes);
 
     try {
-      await attendanceAPI.create(formData);
-      Swal.fire({
-        icon: 'success',
-        title: 'Attendance Recorded!',
-        text: 'Your attendance has been successfully recorded.',
-        confirmButtonColor: '#198754'
-      });
-      setPhoto(null);
-      setNotes('');
-      // Reset file input
-      const fileInput = document.getElementById('photo') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to Record',
-        text: 'There was an error recording your attendance. Please try again.',
-        confirmButtonColor: '#dc3545'
-      });
+      const validData = attendanceSchema.parse(formData);
+      
+      const formDataToSend = new FormData();
+      formDataToSend.append('photo', validData.photo);
+      if (validData.notes) formDataToSend.append('notes', validData.notes);
+
+      await createAttendance(formDataToSend);
+      Swal.fire('Success', 'Attendance recorded successfully!', 'success');
+      setFormData({ notes: '', photo: undefined });
+    } catch (error: any) {
+      if (error.errors) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          fieldErrors[err.path[0]] = err.message;
+        });
+        setErrors(fieldErrors);
+      } else {
+        Swal.fire('Error', error.response?.data?.message || 'Failed to record attendance', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,65 +46,50 @@ const AttendanceForm: React.FC = () => {
   return (
     <div className="container mt-4">
       <div className="row justify-content-center">
-        <div className="col-12 col-md-8 col-lg-6">
-          <div className="card shadow">
-            <div className="card-header bg-primary text-white">
-              <h3 className="card-title mb-0">
-                <i className="bi bi-camera me-2"></i>Record Attendance
-              </h3>
+        <div className="col-md-8">
+          <div className="card">
+            <div className="card-header">
+              <h4><i className="bi bi-camera"></i> Record Attendance</h4>
             </div>
-            <div className="card-body p-4">
+            <div className="card-body">
               <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="photo" className="form-label fw-bold">
-                    Upload Work Photo <span className="text-danger">*</span>
-                  </label>
+                <div className="mb-3">
+                  <label className="form-label">Upload Photo *</label>
                   <input
                     type="file"
-                    className="form-control"
-                    id="photo"
+                    className={`form-control ${errors.photo ? 'is-invalid' : ''}`}
                     accept="image/*"
-                    onChange={(e) => setPhoto(e.target.files?.[0] || null)}
-                    required
+                    onChange={(e) => setFormData({...formData, photo: e.target.files?.[0]})}
                   />
-                  <div className="form-text">
-                    Please upload a photo showing you're working from home
-                  </div>
+                  {errors.photo && <div className="invalid-feedback">{errors.photo}</div>}
                 </div>
-                
-                <div className="mb-4">
-                  <label htmlFor="notes" className="form-label fw-bold">
-                    Work Notes (Optional)
-                  </label>
+                <div className="mb-3">
+                  <label className="form-label">Notes (Optional)</label>
                   <textarea
                     className="form-control"
-                    id="notes"
-                    rows={4}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Describe what you're working on today..."
+                    rows={3}
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    placeholder="Add any notes about your work today..."
                   />
                 </div>
-                
-                <div className="d-grid">
-                  <button 
-                    type="submit" 
-                    className="btn btn-success btn-lg"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Recording...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-check-circle me-2"></i>
-                        Record Attendance
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Recording...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-2"></i>
+                      Record Attendance
+                    </>
+                  )}
+                </button>
               </form>
             </div>
           </div>

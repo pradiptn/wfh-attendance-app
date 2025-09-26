@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { loginSchema, LoginForm } from '../schemas/validationSchemas';
+import { loginSchema, registerSchema, LoginForm, RegisterForm } from '../schemas/validationSchemas';
 import { authAPI } from '../services/api';
 import Swal from 'sweetalert2';
 
-const Login: React.FC = () => {
-  const [formData, setFormData] = useState<LoginForm>({
+const LoginImproved: React.FC = () => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [formData, setFormData] = useState<LoginForm & Partial<RegisterForm>>({
     email: '',
     password: '',
+    name: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
   
   const login = useAuthStore((state) => state.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    setLoading(true);
 
     try {
-      const validData = loginSchema.parse(formData);
-      const response = await authAPI.login(validData);
-      login(response.data.user, response.data.token);
-      Swal.fire('Success', 'Login successful!', 'success');
+      const schema = isRegister ? registerSchema : loginSchema;
+      const validData = schema.parse(formData);
+
+      if (isRegister) {
+        await authAPI.register(validData);
+        Swal.fire('Success', 'Registration successful! Please login.', 'success');
+        setIsRegister(false);
+      } else {
+        const response = await authAPI.login(validData);
+        login(response.data.user, response.data.token);
+        Swal.fire('Success', 'Login successful!', 'success');
+      }
     } catch (error: any) {
       if (error.errors) {
         const fieldErrors: Record<string, string> = {};
@@ -32,10 +40,8 @@ const Login: React.FC = () => {
         });
         setErrors(fieldErrors);
       } else {
-        Swal.fire('Error', error.response?.data?.message || 'Login failed', 'error');
+        Swal.fire('Error', error.response?.data?.message || 'Something went wrong', 'error');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -46,9 +52,21 @@ const Login: React.FC = () => {
           <div className="card">
             <div className="card-body">
               <h3 className="card-title text-center">
-                <i className="bi bi-person-circle"></i> Login
+                {isRegister ? 'Register' : 'Login'}
               </h3>
               <form onSubmit={handleSubmit}>
+                {isRegister && (
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                      placeholder="Full Name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    />
+                    {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                  </div>
+                )}
                 <div className="mb-3">
                   <input
                     type="email"
@@ -69,22 +87,17 @@ const Login: React.FC = () => {
                   />
                   {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                 </div>
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-box-arrow-in-right me-2"></i>
-                      Login
-                    </>
-                  )}
+                <button type="submit" className="btn btn-primary w-100">
+                  {isRegister ? 'Register' : 'Login'}
                 </button>
               </form>
-              <div className="text-center mt-3 text-muted">
-                <small>Contact your administrator to create an account</small>
+              <div className="text-center mt-3">
+                <button
+                  className="btn btn-link"
+                  onClick={() => setIsRegister(!isRegister)}
+                >
+                  {isRegister ? 'Already have an account? Login' : 'Need an account? Register'}
+                </button>
               </div>
             </div>
           </div>
@@ -94,4 +107,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default LoginImproved;

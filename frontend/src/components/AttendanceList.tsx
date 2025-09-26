@@ -1,68 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { attendanceAPI } from '../services/api';
-
-interface Attendance {
-  id: number;
-  timestamp: string;
-  photoPath: string;
-  notes: string;
-  user: {
-    name: string;
-    email: string;
-  };
-}
+import React, { useEffect } from 'react';
+import { useAttendanceStore } from '../stores/attendanceStore';
+import { useAuthStore } from '../stores/authStore';
 
 const AttendanceList: React.FC = () => {
-  const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [filteredAttendances, setFilteredAttendances] = useState<Attendance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [nameFilter, setNameFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const { attendances, loading, fetchAttendances } = useAttendanceStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    fetchAttendances();
-  }, []);
-
-  useEffect(() => {
-    let filtered = attendances;
-    
-    if (nameFilter) {
-      filtered = filtered.filter(att => 
-        att.user.name.toLowerCase().includes(nameFilter.toLowerCase()) ||
-        att.user.email.toLowerCase().includes(nameFilter.toLowerCase())
-      );
-    }
-    
-    if (dateFilter) {
-      filtered = filtered.filter(att => 
-        new Date(att.timestamp).toLocaleDateString() === new Date(dateFilter).toLocaleDateString()
-      );
-    }
-    
-    setFilteredAttendances(filtered);
-  }, [attendances, nameFilter, dateFilter]);
-
-  const fetchAttendances = async () => {
-    try {
-      const response = await attendanceAPI.getAll();
-      setAttendances(response.data);
-      setFilteredAttendances(response.data);
-    } catch (error) {
-      console.error('Failed to fetch attendances');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const userId = user?.role === 'admin' ? undefined : user?.id;
+    fetchAttendances(userId);
+  }, [fetchAttendances, user]);
 
   if (loading) {
     return (
-      <div className="container mt-4">
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading attendance records...</p>
+      <div className="text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
       </div>
     );
@@ -70,126 +23,53 @@ const AttendanceList: React.FC = () => {
 
   return (
     <div className="container mt-4">
-      <div className="row">
-        <div className="col-12">
-          <div className="card shadow">
-            <div className="card-header bg-info text-white">
-              <h3 className="card-title mb-0">
-                <i className="bi bi-list-ul me-2"></i>Attendance Records
-              </h3>
+      <div className="card">
+        <div className="card-header">
+          <h4><i className="bi bi-list-ul"></i> Attendance Records</h4>
+        </div>
+        <div className="card-body">
+          {attendances.length === 0 ? (
+            <div className="text-center text-muted">
+              <i className="bi bi-inbox display-1"></i>
+              <p>No attendance records found</p>
             </div>
-            <div className="card-body">
-              {/* Filter Section */}
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Filter by name or email..."
-                    value={nameFilter}
-                    onChange={(e) => setNameFilter(e.target.value)}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              {filteredAttendances.length === 0 ? (
-                <div className="text-center p-5">
-                  <i className="bi bi-inbox display-1 text-muted"></i>
-                  <h4 className="mt-3 text-muted">No Records Found</h4>
-                  <p className="text-muted">
-                    {attendances.length === 0 ? 'No attendance records have been submitted yet.' : 'No records match your filter criteria.'}
-                  </p>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Employee</th>
-                        <th>Date & Time</th>
-                        <th>Notes</th>
-                        <th>Photo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAttendances.map((attendance) => (
-                        <tr key={attendance.id}>
-                          <td>
-                            <div>
-                              <strong>{attendance.user.name}</strong>
-                              <br />
-                              <small className="text-muted">{attendance.user.email}</small>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="badge bg-primary">
-                              {new Date(attendance.timestamp).toLocaleDateString()}
-                            </span>
-                            <br />
-                            <small className="text-muted">
-                              {new Date(attendance.timestamp).toLocaleTimeString()}
-                            </small>
-                          </td>
-                          <td>
-                            {attendance.notes ? (
-                              <span className="text-wrap">{attendance.notes}</span>
-                            ) : (
-                              <span className="text-muted fst-italic">No notes</span>
-                            )}
-                          </td>
-                          <td>
-                            <button 
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => setSelectedPhoto(`http://localhost:3001/uploads/${attendance.photoPath.replace('uploads/', '').replace('uploads\\', '')}`)}
-                            >
-                              <i className="bi bi-eye me-1"></i>
-                              View Photo
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    {user?.role === 'admin' && <th>Employee</th>}
+                    <th>Photo</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendances.map((attendance) => (
+                    <tr key={attendance.id}>
+                      <td>{new Date(attendance.date).toLocaleDateString()}</td>
+                      <td>{attendance.time}</td>
+                      {user?.role === 'admin' && (
+                        <td>{attendance.user?.name || 'Unknown'}</td>
+                      )}
+                      <td>
+                        <img
+                          src={`http://localhost:3000/uploads/${attendance.photo}`}
+                          alt="Attendance"
+                          className="img-thumbnail"
+                          style={{ width: '60px', height: '60px', objectFit: 'cover' }}
+                        />
+                      </td>
+                      <td>{attendance.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          )}
         </div>
       </div>
-
-      {/* Photo Modal */}
-      {selectedPhoto && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Attendance Photo</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setSelectedPhoto(null)}
-                ></button>
-              </div>
-              <div className="modal-body text-center">
-                <img 
-                  src={selectedPhoto} 
-                  alt="Attendance Photo" 
-                  className="img-fluid rounded"
-                  style={{ maxHeight: '70vh' }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

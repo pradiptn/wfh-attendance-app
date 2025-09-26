@@ -1,138 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './stores/authStore';
 import Login from './components/Login';
 import AttendanceForm from './components/AttendanceForm';
 import AttendanceList from './components/AttendanceList';
 import EmployeeManagement from './components/EmployeeManagement';
-import './App.css';
+import AdminDashboard from './components/AdminDashboard';
+import AttendanceManagement from './components/AttendanceManagement';
+import AdminRoute from './components/AdminRoute';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
-interface User {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-}
+const App: React.FC = () => {
+  const { isAuthenticated, user, logout } = useAuthStore();
 
-function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'attendance' | 'records' | 'employees'>('attendance');
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // In a real app, you'd validate the token with the backend
-      // For now, we'll just check if it exists
-    }
-  }, []);
-
-  const handleLogin = (userData: User) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
-
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
+  if (!isAuthenticated) {
+    return <Login />;
   }
 
   return (
-    <div className="App min-vh-100 bg-light">
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-        <div className="container">
-          <a className="navbar-brand fw-bold" href="#">
-            <i className="bi bi-house-door me-2"></i>
-            WFH Attendance
-          </a>
-          
-          <button 
-            className="navbar-toggler" 
-            type="button" 
-            data-bs-toggle="collapse" 
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav me-auto">
-              <li className="nav-item">
-                <button 
-                  className={`nav-link btn btn-link ${currentView === 'attendance' ? 'active' : ''}`}
-                  onClick={() => setCurrentView('attendance')}
-                >
-                  <i className="bi bi-camera me-1"></i>
-                  Record Attendance
-                </button>
-              </li>
-              <li className="nav-item">
-                <button 
-                  className={`nav-link btn btn-link ${currentView === 'records' ? 'active' : ''}`}
-                  onClick={() => setCurrentView('records')}
-                >
-                  <i className="bi bi-list-ul me-1"></i>
-                  View Records
-                </button>
-              </li>
-              {user.role === 'admin' && (
-                <li className="nav-item">
-                  <button 
-                    className={`nav-link btn btn-link ${currentView === 'employees' ? 'active' : ''}`}
-                    onClick={() => setCurrentView('employees')}
-                  >
-                    <i className="bi bi-people me-1"></i>
-                    Manage Employees
-                  </button>
-                </li>
-              )}
-            </ul>
-            
-            <div className="navbar-nav">
-              <div className="nav-item dropdown">
-                <a 
-                  className="nav-link dropdown-toggle" 
-                  href="#" 
-                  role="button" 
-                  data-bs-toggle="dropdown"
-                >
-                  <i className="bi bi-person-circle me-1"></i>
-                  {user.name}
+    <Router>
+      <div className="App">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+          <div className="container">
+            <span className="navbar-brand">WFH Attendance</span>
+            <div className="navbar-nav ms-auto">
+              <span className="navbar-text me-3">
+                Welcome, {user?.name} ({user?.role})
+              </span>
+              <button className="btn btn-outline-light" onClick={logout}>
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-2 bg-light vh-100">
+              <div className="list-group list-group-flush mt-3">
+                {user?.role === 'admin' && (
+                  <a href="/dashboard" className="list-group-item list-group-item-action">
+                    <i className="bi bi-speedometer2 me-2"></i>Dashboard
+                  </a>
+                )}
+                <a href="/attendance" className="list-group-item list-group-item-action">
+                  <i className="bi bi-camera me-2"></i>Record Attendance
                 </a>
-                <ul className="dropdown-menu dropdown-menu-end">
-                  <li>
-                    <span className="dropdown-item-text">
-                      <small className="text-muted">{user.email}</small>
-                    </span>
-                  </li>
-                  <li>
-                    <span className="dropdown-item-text">
-                      <span className={`badge ${user.role === 'admin' ? 'bg-danger' : 'bg-secondary'}`}>
-                        {user.role}
-                      </span>
-                    </span>
-                  </li>
-                  <li><hr className="dropdown-divider" /></li>
-                  <li>
-                    <button className="dropdown-item" onClick={handleLogout}>
-                      <i className="bi bi-box-arrow-right me-2"></i>
-                      Logout
-                    </button>
-                  </li>
-                </ul>
+                <a href="/history" className="list-group-item list-group-item-action">
+                  <i className="bi bi-list-ul me-2"></i>View History
+                </a>
+                {user?.role === 'admin' && (
+                  <>
+                    <a href="/employees" className="list-group-item list-group-item-action">
+                      <i className="bi bi-people me-2"></i>Manage Employees
+                    </a>
+                    <a href="/manage-attendance" className="list-group-item list-group-item-action">
+                      <i className="bi bi-eye me-2"></i>View Attendance
+                    </a>
+                  </>
+                )}
               </div>
+            </div>
+            <div className="col-md-10">
+              <Routes>
+                <Route path="/" element={<Navigate to={user?.role === 'admin' ? '/dashboard' : '/attendance'} />} />
+                <Route path="/attendance" element={<AttendanceForm />} />
+                <Route path="/history" element={<AttendanceList />} />
+                <Route path="/dashboard" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } />
+                <Route path="/employees" element={
+                  <AdminRoute>
+                    <EmployeeManagement />
+                  </AdminRoute>
+                } />
+                <Route path="/manage-attendance" element={
+                  <AdminRoute>
+                    <AttendanceManagement />
+                  </AdminRoute>
+                } />
+              </Routes>
             </div>
           </div>
         </div>
-      </nav>
-      
-      <main className="pb-4">
-        {currentView === 'attendance' && <AttendanceForm />}
-        {currentView === 'records' && <AttendanceList />}
-        {currentView === 'employees' && user.role === 'admin' && <EmployeeManagement />}
-      </main>
-    </div>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;

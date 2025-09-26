@@ -27,4 +27,12 @@ export class AttendanceController {
     const userId = req.user.role === 'admin' ? undefined : req.user.userId;
     return this.attendanceService.getAttendances(userId);
   }
+
+  @Get('dashboard')
+  async getDashboardStats(@Request() req) {
+    if (req.user.role !== 'admin') {
+      throw new Error('Access denied');
+    }
+    return this.attendanceService.getDashboardStats();
+  }
 }

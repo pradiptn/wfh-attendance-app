@@ -36,3 +36,6 @@ Thumbs.db
 .cache/
 .npm/
 .yarn/
+
+# Test files
+test.txt

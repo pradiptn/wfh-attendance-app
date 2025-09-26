@@ -33,4 +33,28 @@ export class AttendanceService {
     
     return query.getMany();
   }
+
+  async getDashboardStats() {
+    const totalEmployees = await this.userRepository.count();
+    const totalAttendances = await this.attendanceRepository.count();
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayAttendances = await this.attendanceRepository
+      .createQueryBuilder('attendance')
+      .where('DATE(attendance.createdAt) = :today', { today })
+      .getCount();
+
+    const recentAttendances = await this.attendanceRepository.find({
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: 5
+    });
+
+    return {
+      totalEmployees,
+      totalAttendances,
+      todayAttendances,
+      recentAttendances
+    };
+  }
 }
