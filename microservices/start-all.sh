@@ -2,11 +2,21 @@
 
 echo "Starting all microservices..."
 
+# Build and start services
+services=("auth-service" "employee-service" "attendance-service" "api-gateway")
+
+for service in "${services[@]}"; do
+    echo "Building $service..."
+    (cd $service && npm install && npm run build) &
+done
+
+wait
+
 # Start services in background
-(cd auth-service && npx nest start --watch) &
-(cd employee-service && npx nest start --watch) &
-(cd attendance-service && npx nest start --watch) &
-(cd api-gateway && npx nest start --watch) &
+(cd auth-service && npm start) &
+(cd employee-service && npm start) &
+(cd attendance-service && npm start) &
+(cd api-gateway && npm start) &
 
 echo "All services starting..."
 echo "Auth Service: http://localhost:3001"
