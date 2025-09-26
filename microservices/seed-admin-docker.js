@@ -17,8 +17,8 @@ async function seedAdmin() {
     const hashedPassword = await bcrypt.hash('admin123', 10);
     
     const query = `
-      INSERT INTO users (name, email, password, role, "createdAt", "updatedAt") 
-      VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+      INSERT INTO "user" (name, email, password, role) 
+      VALUES ($1, $2, $3, $4) 
       ON CONFLICT (email) DO NOTHING
       RETURNING id, email, role;
     `;
