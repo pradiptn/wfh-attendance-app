@@ -130,8 +130,7 @@ services:
       - NODE_ENV=production
     command: sh -c "npm install bcrypt pg && node seed-admin.js"
     depends_on:
-      auth-db:
-        condition: service_healthy
+      - auth-db
     restart: "no"
 
 volumes:
