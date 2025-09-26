@@ -12,18 +12,17 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log('API Request:', config.method?.toUpperCase(), config.url, config.params);
   return config;
 });
 
 // Add response interceptor for debugging
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.config.url, response.status, response.data);
+    console.log('API Response:', response.config.url, response.status);
     return response;
   },
   (error) => {
-    console.error('API Error:', error.config?.url, error.response?.status, error.response?.data);
+    console.error('API Error:', error.config?.url, error.response?.status);
     return Promise.reject(error);
   }
 );
@@ -42,9 +41,7 @@ export const employeeAPI = {
 
 export const attendanceAPI = {
   getAll: (userId?: number) => {
-    console.log('attendanceAPI.getAll called with userId:', userId);
     const params = userId ? { userId } : {};
-    console.log('API params:', params);
     return api.get('/attendance', { params });
   },
   create: (data: FormData) => api.post('/attendance', data, {

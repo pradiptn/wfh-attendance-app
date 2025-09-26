@@ -91,10 +91,13 @@ const AttendanceManagement: React.FC = () => {
                       <td>{attendance.user?.email || 'N/A'}</td>
                       <td>{attendance.date ? new Date(attendance.date).toLocaleDateString() : 'N/A'}</td>
                       <td>{attendance.time || 'N/A'}</td>
-                      <td>
+                      <td style={{ position: 'relative', zIndex: 1 }}>
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => {
+                          style={{ position: 'relative', zIndex: 2, pointerEvents: 'auto' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             console.log('Photo button clicked:', attendance.photo);
                             const photoUrl = attendance.photo.startsWith('http') 
                               ? attendance.photo 

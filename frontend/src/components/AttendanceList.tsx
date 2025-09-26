@@ -75,10 +75,13 @@ const AttendanceList: React.FC = () => {
                       {user?.role === 'admin' && (
                         <td>{attendance.user?.name || 'Unknown'}</td>
                       )}
-                      <td>
+                      <td style={{ position: 'relative', zIndex: 1 }}>
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => {
+                          style={{ position: 'relative', zIndex: 2, pointerEvents: 'auto' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             console.log('Button clicked, photo:', attendance.photo);
                             handleViewPhoto(attendance.photo);
                           }}
