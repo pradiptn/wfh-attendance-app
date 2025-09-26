@@ -65,8 +65,7 @@ services:
       - DB_PASSWORD=password
       - DB_DATABASE=auth_db
     depends_on:
-      auth-db:
-        condition: service_healthy
+      - auth-db
     restart: unless-stopped
 
   employee-service:
@@ -83,8 +82,7 @@ services:
       - DB_PASSWORD=password
       - DB_DATABASE=employee_db
     depends_on:
-      employee-db:
-        condition: service_healthy
+      - employee-db
     restart: unless-stopped
 
   attendance-service:
@@ -101,8 +99,7 @@ services:
       - DB_PASSWORD=password
       - DB_DATABASE=attendance_db
     depends_on:
-      attendance-db:
-        condition: service_healthy
+      - attendance-db
     restart: unless-stopped
 
   api-gateway:
